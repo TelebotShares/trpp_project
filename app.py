@@ -50,11 +50,13 @@ class TelebotShares:
         @self.bot.message_handler(commands=['start'])
         def send_welcome(message):
             self.bot.send_message(message.chat.id,
-                                  'Привет, Акционер! Давай познакомимся поближе - напиши команду /help')
+                                  'Привет, Акционер! Давай познакомимся поближе - напиши команду /help',
+                                  reply_markup=self.keyboard)
 
             # register new user
             chat_id = message.chat.id
             self.db.reg_user(chat_id)
+            self.db.test_query()
 
         @self.bot.message_handler(commands=['help'])  # просто текстовая команда
         def send_help(message):
@@ -141,6 +143,9 @@ class TelebotShares:
                 # потом мб добавим статистику по портфелю (рост сбержеений или тому подобного, но пока Похуй+поебать)
                 # триггерни метод БД get_portfolio (он вернет dataframe)
                 # пользователю в чате вывести табличку (опять же, понять в каком виде)
+                # если тебе придет сообщение, то выводи пользовтелю: соре, ты еще не указал свои акции, иначе датафрейм
+                # ВНИМАНИЕ: при проверке что тебе пришло (датафрейм или строка) обязательно добавляй условие
+                # isinstance(x, pd.Dataframe), если нет - значит строка с ошибкой, если да - то работай с датафреймом
                 pass
 
             else:
