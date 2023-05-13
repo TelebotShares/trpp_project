@@ -1,4 +1,3 @@
-import requests.exceptions
 import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -32,7 +31,7 @@ def search_by_name(name):
 
 
 def leaderboard():
-    #TODO: Qater
+    # TODO: Qater
     # yfinance: how to retrieve info about top-5 (not a single share)
     # get leaderboard (by param = 'Close price') TOP-5
     # return DataFrame (columns: position (1-5), share_nm, close_price (latest time))
@@ -48,8 +47,3 @@ def share_exists(share_nm):
         return False
 
     return True
-    #TODO: Qater(done)
-    # send request with yfinance
-    # check share for existance
-    # return bool
-
