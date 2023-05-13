@@ -132,7 +132,9 @@ class TelebotShares:
                 #   trigger database.py method (add_share()) with param=share_name, amount
                 #   get response from add_share()
                 # if successful: send to user 'your share written successfully'
-                pass
+                self.bot.send_message(message.chat.id, 'Введите название акции и её количество')
+                self.bot.register_next_step_handler(message, add_share)
+
             elif message.text == 'Удалить акцию':
                 #TODO smrgn
                 # по аналогии с методом Добавления: добавить метод-обработчик remove_share
@@ -141,7 +143,9 @@ class TelebotShares:
                 # обработать ответ от БД (bool)
                 # if successful:
                 #   отправь пользователю: удаление успешно
-                pass
+                self.bot.send_message(message.chat.id, 'Введите название акции')
+                self.bot.register_next_step_handler(message, remove_share)
+
             elif message.text == 'Изменить количество':
                 #TODO smrgn
                 # делать так же как предыдущие 2 метода, считывать в новом методе имя акции + новое актуальное значение кол-ва
@@ -149,7 +153,9 @@ class TelebotShares:
                 # проверяй, что кол-во ввел целочисленное + положительное (если 0, скажи, что надо в функционал Удаление)
                 # триггерни метод БД update_share(param=share_nm, amount)
                 # получи ответ от БД (bool) Об успешности операции
-                pass
+                self.bot.send_message(message.chat.id, 'Введите название акции и актуальное количество')
+                self.bot.register_next_step_handler(message, update_share)
+
             elif message.text == 'Мои акции':
                 # получаем данные о портфеле из базы данных
                 portfolio_data = self.db.get_portfolio()
@@ -214,6 +220,36 @@ class TelebotShares:
             else:
                 self.bot.send_message(message.chat.id, 'Некорректное время',
                                       reply_markup=self.nested_keyboard_2)
+
+        def add_share(message): #меня смущает, что название такое же как и в файле database
+            share_nm, amount = message.text.split()
+            #while int(amount) <= 0:
+            #    self.bot.send_message(message.chat.id,'Количество акций должно быть больше 0, введите корректное количество акций')
+            #    amount = message.text так не работает, потому что он берет старое значение месседж(( пока не придумала, как пофиксить
+            if parser.share_exists(share_nm) and (int(amount) > 0):
+                if db.Database.add_share(message.chat.id, share_nm, int(amount)): #c параметрами тут косяк явный
+                    self.bot.send_message(message.chat.id, 'Акция успешно записана:)')
+            #TODO smrgn
+            # дописать обработку случаев, когда акции нет и/или количество меньше 0
+            # а также случай, когда акция не записалась в базу данных, но я, честно говоря, не очень понимаю, как это обработать
+
+        def remove_share(message):
+            share_nm = message.text
+            # проверка, что такая акция есть в протфеле
+            if db.Database.remove_share(message.chat.id, share_nm): #c параметрами тут косяк явный
+                self.bot.send_message(message.chat.id, 'Акция успешно удалена:)')
+
+        def update_share(message):
+            share_nm, amount = message.text.split()
+            if int(amount) == 0:
+                self.bot.send_message(message.chat.id, 'Вероятно, вам следует использовать кнопку "Удалить акцию"')
+            # if тоже проверка, что такая акция есть в портфеле and (int(amount) > 0):
+            if db.Database.update_share(message.chat.id, share_nm, amount):
+                self.bot.send_message(message.chat.id, 'Количество успешно обновлено')
+        #TODO smrgn
+        # Ну аналогично предыдущем функциям, реализовать в случае, когда не успешно что-то
+        # + я не сделала проверку на целочисленное, а тупо беру целую часть, тоже не очень решение, подумаю, как пофиксить
+        # пока пушу так, я их не могу тестить, так как функции, которые использую, или не реализованы, или реализованы иначе
 
     def start(self):  # метод, срабатывающий при запуске бота
         print('============= BOT START ===============')
