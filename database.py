@@ -26,87 +26,130 @@ class Database:
         # result = pd.DataFrame(self.cursor.fetchall())
         # print(result)
 
+    def sub_add(self, chat_id, share_nm, delivery_tm):
+        sql = f'select user_id from tele_user where chat_id = {chat_id};'
+        self.cursor.execute(sql)
+        uid = self.cursor.fetchone()
+
+        uid = int(uid[0])
+        delivery_tm = delivery_tm + ':00'
+        sql = f'''
+        insert into subscription 
+        (user_id, share_nm, delivery_tm)
+        values ({uid}, '{share_nm}', '{delivery_tm}'::time);
+        '''
+        self.cursor.execute(sql)
+
+    def get_subscriptions(self, chat_id):
+        sql = f'select user_id from tele_user where chat_id = {chat_id};'
+        self.cursor.execute(sql)
+        uid = self.cursor.fetchone()
+
+        uid = int(uid[0])
+
+        sql = f'''select share_nm, delivery_tm::text from subscription
+                where user_id = {uid}'''
+        self.cursor.execute(sql)
+        res = self.cursor.fetchall()
+
+        return res
+
+    def unsubscribe(self, chat_id, share_nm):
+        sql = f'select user_id from tele_user where chat_id = {chat_id};'
+        self.cursor.execute(sql)
+        uid = self.cursor.fetchone()
+
+        uid = int(uid[0])
+        sql = f'''
+        delete from subscription 
+        where user_id = {uid} and share_nm = '{share_nm}';
+        '''
+        self.cursor.execute(sql)
+
+    def sub_exists(self, chat_id, share_nm):
+        sql = f'select user_id from tele_user where chat_id = {chat_id};'
+        self.cursor.execute(sql)
+        uid = self.cursor.fetchone()
+
+        uid = int(uid[0])
+        sql = f'''select sub_id from subscription where user_id = {uid} and share_nm = '{share_nm}';'''
+        self.cursor.execute(sql)
+        res = self.cursor.fetchone()
+
+        if res:
+            return True
+
+        return False
+
     def add_share(self, chat_id, share_nm, amount):
         sql = f'select user_id from tele_user where chat_id = {chat_id};'
         self.cursor.execute(sql)
         uid = self.cursor.fetchone()
 
-        if not uid:
-            return 'Registration error'
-
         uid = int(uid[0])
-        sql = f'select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = {share_nm};'
+        sql = f'''select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = '{share_nm}';'''
         self.cursor.execute(sql)
         res = self.cursor.fetchone()
 
         if res:
-            return 'Share already added'
+            return False
 
         sql = f'''
         insert into user_x_share
         (user_id, share_nm, amount) 
-        values ({uid}, {share_nm}, {amount});            
+        values ({uid}, '{share_nm}', {amount});            
         '''
         self.cursor.execute(sql)
 
-        return 'GOOD'
+        return True
 
     def remove_share(self, chat_id, share_nm):
         sql = f'select user_id from tele_user where chat_id = {chat_id};'
         self.cursor.execute(sql)
         uid = self.cursor.fetchone()
 
-        if not uid:
-            return 'Registration error'
-
         uid = int(uid[0])
-        sql = f'select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = {share_nm};'
+        sql = f'''select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = '{share_nm}';'''
         self.cursor.execute(sql)
         res = self.cursor.fetchone()
 
         if not res:
-            return 'Such share not added'
+            return False
 
         sql = f'''
                 delete from user_x_share
-                where user_id = {uid} and share_nm = {share_nm};            
+                where user_id = {uid} and share_nm = '{share_nm}';            
                 '''
         self.cursor.execute(sql)
 
-        return 'GOOD'
+        return True
 
     def update_share(self, chat_id, share_nm, amount):
         sql = f'select user_id from tele_user where chat_id = {chat_id};'
         self.cursor.execute(sql)
         uid = self.cursor.fetchone()
 
-        if not uid:
-            return 'Registration error'
-
         uid = int(uid[0])
-        sql = f'select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = {share_nm};'
+        sql = f'''select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = '{share_nm}';'''
         self.cursor.execute(sql)
         res = self.cursor.fetchone()
 
         if not res:
-            return 'Such share not added'
+            return False
 
         sql = f'''
                 update user_x_share
                 set amount = {amount}
-                where user_id = {uid} and share_nm = {share_nm};            
+                where user_id = {uid} and share_nm = '{share_nm}';            
                 '''
         self.cursor.execute(sql)
 
-        return 'GOOD'
+        return True
 
     def get_portfolio(self, chat_id):
         sql = f'select user_id from tele_user where chat_id = {chat_id};'
         self.cursor.execute(sql)
         uid = self.cursor.fetchone()
-
-        if not uid:
-            return 'Registration error'
 
         uid = int(uid[0])
         sql = f'select share_nm, amount from user_x_share where user_id = {uid};'

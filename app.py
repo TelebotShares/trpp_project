@@ -1,6 +1,7 @@
 import telebot
 import yahoo_parser as parser
 import pandas as pd
+from tabulate import tabulate
 
 
 # Класс, реализующий функционал бота
@@ -43,6 +44,16 @@ class TelebotShares:
         self.nested_keyboard_3.add(self.nested_button31, self.nested_button32, self.nested_button33,
                                    self.nested_button34, self.return_button)
 
+        # Выбор времени (функционал Подписок)
+        self.time_keyboard = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+        self.timebutton_1 = telebot.types.KeyboardButton('10:00')
+        self.timebutton_2 = telebot.types.KeyboardButton('14:00')
+        self.timebutton_3 = telebot.types.KeyboardButton('18:00')
+        self.timebutton_4 = telebot.types.KeyboardButton('22:00')
+
+        self.time_keyboard.add(self.timebutton_1, self.timebutton_2,
+                               self.timebutton_3, self.timebutton_4)
+
         self.add_handlers()  # Добавляет обработчики сообщений
         print('Bot is set up')
 
@@ -56,7 +67,6 @@ class TelebotShares:
             # register new user
             chat_id = message.chat.id
             self.db.reg_user(chat_id)
-            self.db.test_query()
 
         @self.bot.message_handler(commands=['help'])  # просто текстовая команда
         def send_help(message):
@@ -86,14 +96,25 @@ class TelebotShares:
 
             # блок подписок
             elif message.text == 'Подписаться':
-                # TODO rybrix
-                pass
+                self.bot.send_message(message.chat.id, 'Введите название акции, на которую оформляете подписки')
+                self.bot.register_next_step_handler(message, subscribe)  # переход к след действию
+
             elif message.text == 'Отписаться':
-                # TODO rybrix
-                pass
+                self.bot.send_message(message.chat.id, 'Введите название акции,от которой хотите отписаться')
+                self.bot.register_next_step_handler(message, unsubscribe)  # переход к след действию
+
             elif message.text == 'Мои подписки':
-                # TODO rybrix
-                pass
+                subs = self.db.get_subscriptions(message.chat.id)
+
+                if not subs:
+                    self.bot.send_message(message.chat.id, 'У вас нет подписок :(', reply_markup=self.nested_keyboard_2)
+                else:
+                    df = pd.DataFrame(subs, columns=['Акция', 'Время рассылки'])
+                    df['Акция'] = df['Акция'].str.upper()
+                    df['Время рассылки'] = pd.to_datetime(df['Время рассылки']).dt.strftime('%H:%M')
+                    table = tabulate(df, headers='keys', tablefmt='orgtbl', showindex=False)
+                    self.bot.send_message(message.chat.id, f'Список ваших подписок:\n<pre>{table}</pre>',
+                                          parse_mode='HTML', reply_markup=self.nested_keyboard_2)
 
             # блок Биржи
             elif message.text == 'Поиск по акции':
@@ -158,12 +179,49 @@ class TelebotShares:
                                       reply_markup=self.keyboard)
 
         def read_share(message):
-            share_nm = message.text
+            share_nm = message.text.lower()
             pic = parser.search_by_name(share_nm)
             if pic is not None:
                 self.bot.send_photo(message.chat.id, pic)
             else:
                 self.bot.send_message(message.chat.id, 'Такой акции нет :(')
+
+        def subscribe(message):
+            share_nm = message.text.lower()
+
+            if self.db.sub_exists(message.chat.id, share_nm):
+                self.bot.send_message(message.chat.id, 'У тебя уже есть подписка на эту акцию')
+            else:
+                share_found = parser.share_exists(share_nm)
+                share_found = True
+                if not share_found:
+                    self.bot.send_message(message.chat.id, 'Такой акции нет :(')
+                else:
+                    self.bot.send_message(message.chat.id, 'Выберите время рассылки',
+                                          reply_markup=self.time_keyboard)
+                    self.bot.register_next_step_handler(message, subscribe_next, share_nm)
+
+        def unsubscribe(message):
+            share_nm = message.text.lower()
+
+            if not self.db.sub_exists(message.chat.id, share_nm):
+                self.bot.send_message(message.chat.id, 'У тебя нет подписки на эту акцию')
+            else:
+                self.db.unsubscribe(message.chat.id, share_nm)
+                self.bot.send_message(message.chat.id, 'Вы успешно отписались',
+                                      reply_markup=self.nested_keyboard_2)
+
+        def subscribe_next(message, share_nm):
+            chat_id = message.chat.id
+
+            if message.text == '10:00' or message.text == '14:00' or message.text == '18:00' or message.text == '22:00':
+                delivery_tm = message.text
+                self.db.sub_add(chat_id, share_nm, delivery_tm)
+                self.bot.send_message(message.chat.id, 'Вы успешно подписались!',
+                                      reply_markup=self.keyboard)
+            else:
+                self.bot.send_message(message.chat.id, 'Некорректное время',
+                                      reply_markup=self.nested_keyboard_2)
 
     def start(self):  # метод, срабатывающий при запуске бота
         print('============= BOT START ===============')
