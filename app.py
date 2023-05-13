@@ -1,8 +1,6 @@
 import telebot
 import yahoo_parser as parser
 import pandas as pd
-import dataframe_image as dfi
-import os
 
 
 # Класс, реализующий функционал бота
@@ -141,19 +139,16 @@ class TelebotShares:
                 pass
             elif message.text == 'Мои акции':
                 # получаем данные о портфеле из базы данных
-                portfolio_data = self.db.get_partfolio()
+                portfolio_data = self.db.get_portfolio()
 
                 # если это не датафрейм просим пользователя сначала добавить акции в портфель
                 if not isinstance(portfolio_data, pd.DataFrame):
                     self.bot.send_message(message.chat.id, 'Для удобного отображения вашего портфеля акций сначала '
                                                            'заполните информацию о нём')
-                # убираем из визуализации датафрейма колонку индексов
-                portfolio_data = portfolio_data.style.set_properties
-                # сохраняет информацию из датафрейма в виде фото и отсылаем пользователю
-                dfi.export(portfolio_data, 'data.png')
-                self.bot.send_photo(message.chat.id, 'data.png')
-                # удаляем более не нужный файл
-                os.remove('data.png')
+                else:
+                    table = tabulate(portfolio_data, headers='keys', tablefmt='orgtbl', showindex=False)
+                    self.bot.send_message(message.chat.id, f'Список ваших акций:\n<pre>{table}</pre>',
+                                          parse_mode='HTML', reply_markup=self.nested_keyboard_3)
 
             else:
                 # Отправляем сообщение и клавиатуру с основными кнопками
