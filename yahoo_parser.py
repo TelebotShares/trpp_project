@@ -1,3 +1,4 @@
+import requests.exceptions
 import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -39,8 +40,16 @@ def leaderboard():
 
 
 def share_exists(share_nm):
-    #TODO: Qater
+    share = yf.Ticker(share_nm)
+
+    hist = share.history(period="7d", interval='4h', actions=False)
+
+    if hist.empty:
+        return False
+
+    return True
+    #TODO: Qater(done)
     # send request with yfinance
     # check share for existance
     # return bool
-    pass
+

@@ -1,7 +1,8 @@
 import telebot
 import yahoo_parser as parser
 import pandas as pd
-
+import dataframe_image as dfi
+import os
 
 # Класс, реализующий функционал бота
 class TelebotShares:
@@ -138,7 +139,19 @@ class TelebotShares:
                 # получи ответ от БД (bool) Об успешности операции
                 pass
             elif message.text == 'Мои акции':
-                #TODO Qater
+                # получаем данные о портфеле из базы данных
+                portfolio_data = self.db.get_partfolio()
+
+                # если это не датафрейм просим пользователя сначала добавить акции в портфель
+                if not isinstance(portfolio_data, pd.DataFrame):
+                    self.bot.send_message(message.chat.id, 'Для удобного отображения вашего портфеля акций сначала '
+                                                           'заполните информацию о нём')
+
+                portfolio_data = portfolio_data.style.set_properties
+                dfi.export(portfolio_data, 'data.png')
+                self.bot.send_photo(message.chat.id, 'data.png')
+                os.remove('data.png')
+                #TODO Qater(Done)
                 # смысл этого блока: вывести пользователю табличку вида (имя акции - кол-во у пользователя)
                 # потом мб добавим статистику по портфелю (рост сбержеений или тому подобного, но пока Похуй+поебать)
                 # триггерни метод БД get_portfolio (он вернет dataframe)
@@ -146,7 +159,6 @@ class TelebotShares:
                 # если тебе придет сообщение, то выводи пользовтелю: соре, ты еще не указал свои акции, иначе датафрейм
                 # ВНИМАНИЕ: при проверке что тебе пришло (датафрейм или строка) обязательно добавляй условие
                 # isinstance(x, pd.Dataframe), если нет - значит строка с ошибкой, если да - то работай с датафреймом
-                pass
 
             else:
                 # Отправляем сообщение и клавиатуру с основными кнопками
