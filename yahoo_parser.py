@@ -2,7 +2,6 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
-import pandas as pd
 
 
 def search_by_name(name):
@@ -28,14 +27,6 @@ def search_by_name(name):
     plt.savefig(buf, format='png')
     buf.seek(0)
     return buf
-
-
-def leaderboard():
-    # TODO: Qater
-    # yfinance: how to retrieve info about top-5 (not a single share)
-    # get leaderboard (by param = 'Close price') TOP-5
-    # return DataFrame (columns: position (1-5), share_nm, close_price (latest time))
-    pass
 
 
 def share_exists(share_nm):

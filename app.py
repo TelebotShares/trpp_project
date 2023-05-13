@@ -23,8 +23,7 @@ class TelebotShares:
         # Кнопка Биржа
         self.nested_keyboard_1 = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
         self.nested_button11 = telebot.types.KeyboardButton('Поиск по акции')
-        self.nested_button12 = telebot.types.KeyboardButton('Лидерборд')
-        self.nested_keyboard_1.add(self.nested_button11, self.nested_button12, self.return_button)
+        self.nested_keyboard_1.add(self.nested_button11, self.return_button)
 
         # Кнопка Подписки
         self.nested_keyboard_2 = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
@@ -120,13 +119,6 @@ class TelebotShares:
             elif message.text == 'Поиск по акции':
                 self.bot.send_message(message.chat.id, 'Введите название акции')
                 self.bot.register_next_step_handler(message, read_share)  # переход к след действию
-
-            elif message.text == 'Лидерборд':
-                #TODO Qater
-                # отсюда триггерить метод yahoo_parser для лидерборда
-                # метод возвращает табличку датафрейм
-                # придумать, как выводить лидерборд (табличку)
-                pass
 
             # блок Мой портфель
             elif message.text == 'Добавить акцию':
