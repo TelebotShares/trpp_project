@@ -31,7 +31,7 @@ def search_by_name(name):
 
 
 def leaderboard():
-    #TODO: Qater
+    # TODO: Qater
     # yfinance: how to retrieve info about top-5 (not a single share)
     # get leaderboard (by param = 'Close price') TOP-5
     # return DataFrame (columns: position (1-5), share_nm, close_price (latest time))
@@ -39,8 +39,11 @@ def leaderboard():
 
 
 def share_exists(share_nm):
-    #TODO: Qater
-    # send request with yfinance
-    # check share for existance
-    # return bool
-    pass
+    share = yf.Ticker(share_nm)
+
+    hist = share.history(period="7d", interval='4h', actions=False)
+
+    if hist.empty:
+        return False
+
+    return True
