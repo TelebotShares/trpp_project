@@ -118,53 +118,31 @@ class TelebotShares:
             # блок Биржи
             elif message.text == 'Поиск по акции':
                 self.bot.send_message(message.chat.id, 'Введите название акции')
-                self.bot.register_next_step_handler(message, read_share)  # переход к след действию
+                self.bot.register_next_step_handler(message, share_stat)  # переход к след действию
 
             # блок Мой портфель
             elif message.text == 'Добавить акцию':
-                #TODO smrgn
-                # send message to user 'write the name of your share (space) amount' (read by split, add check for amount: int, >0)
-                # add register_next_step_handler: add_share (для примера посмотри read_share и откуда он вызывается)
-                # in add_share get the share name
-                # execute method from yahoo_parser.py (share_exists) with param=share_name (from user)
-                # check for existance (the response of method share_exists())
-                # if exists:
-                #   trigger database.py method (add_share()) with param=share_name, amount
-                #   get response from add_share()
-                # if successful: send to user 'your share written successfully'
                 self.bot.send_message(message.chat.id, 'Введите название акции и её количество')
                 self.bot.register_next_step_handler(message, add_share)
 
             elif message.text == 'Удалить акцию':
-                #TODO smrgn
-                # по аналогии с методом Добавления: добавить метод-обработчик remove_share
-                # в нем точно так же спросить имя акции (но уже без количества)
-                # триггернуть метод БД remove_share(param=share_nm)
-                # обработать ответ от БД (bool)
-                # if successful:
-                #   отправь пользователю: удаление успешно
                 self.bot.send_message(message.chat.id, 'Введите название акции')
                 self.bot.register_next_step_handler(message, remove_share)
 
             elif message.text == 'Изменить количество':
-                #TODO smrgn
-                # делать так же как предыдущие 2 метода, считывать в новом методе имя акции + новое актуальное значение кол-ва
-                # считывай одним сообщение с помощью input.split
-                # проверяй, что кол-во ввел целочисленное + положительное (если 0, скажи, что надо в функционал Удаление)
-                # триггерни метод БД update_share(param=share_nm, amount)
-                # получи ответ от БД (bool) Об успешности операции
                 self.bot.send_message(message.chat.id, 'Введите название акции и актуальное количество')
                 self.bot.register_next_step_handler(message, update_share)
 
             elif message.text == 'Мои акции':
                 # получаем данные о портфеле из базы данных
-                portfolio_data = self.db.get_portfolio()
+                portfolio_data = self.db.get_portfolio(message.chat.id)
 
                 # если это не датафрейм просим пользователя сначала добавить акции в портфель
                 if not isinstance(portfolio_data, pd.DataFrame):
                     self.bot.send_message(message.chat.id, 'Для удобного отображения вашего портфеля акций сначала '
                                                            'заполните информацию о нём')
                 else:
+                    portfolio_data['Акция'] = portfolio_data['Акция'].str.upper()
                     table = tabulate(portfolio_data, headers='keys', tablefmt='orgtbl', showindex=False)
                     self.bot.send_message(message.chat.id, f'Список ваших акций:\n<pre>{table}</pre>',
                                           parse_mode='HTML', reply_markup=self.nested_keyboard_3)
@@ -176,7 +154,7 @@ class TelebotShares:
                                       '\nВозможно, тебе стоит заглянуть в /help',
                                       reply_markup=self.keyboard)
 
-        def read_share(message):
+        def share_stat(message):
             share_nm = message.text.lower()
             pic = parser.search_by_name(share_nm)
             if pic is not None:
@@ -191,7 +169,6 @@ class TelebotShares:
                 self.bot.send_message(message.chat.id, 'У тебя уже есть подписка на эту акцию')
             else:
                 share_found = parser.share_exists(share_nm)
-                share_found = True
                 if not share_found:
                     self.bot.send_message(message.chat.id, 'Такой акции нет :(')
                 else:
@@ -221,35 +198,82 @@ class TelebotShares:
                 self.bot.send_message(message.chat.id, 'Некорректное время',
                                       reply_markup=self.nested_keyboard_2)
 
-        def add_share(message): #меня смущает, что название такое же как и в файле database
+        def add_share(message):
+            # check message for 2 arguments
+            space = True
+            counter = 0
+            for i in message.text:
+                if i == ' ' or i == '\n' or i == '\t':
+                    space = True
+                elif space:
+                    space = False
+                    counter += 1
+
+            if counter != 2:
+                self.bot.send_message(message.chat.id, 'Необходимо вводить ровно 2 значения',
+                                      reply_markup=self.nested_keyboard_3)
+                return
+
             share_nm, amount = message.text.split()
-            #while int(amount) <= 0:
-            #    self.bot.send_message(message.chat.id,'Количество акций должно быть больше 0, введите корректное количество акций')
-            #    amount = message.text так не работает, потому что он берет старое значение месседж(( пока не придумала, как пофиксить
-            if parser.share_exists(share_nm) and (int(amount) > 0):
-                if db.Database.add_share(message.chat.id, share_nm, int(amount)): #c параметрами тут косяк явный
-                    self.bot.send_message(message.chat.id, 'Акция успешно записана:)')
-            #TODO smrgn
-            # дописать обработку случаев, когда акции нет и/или количество меньше 0
-            # а также случай, когда акция не записалась в базу данных, но я, честно говоря, не очень понимаю, как это обработать
+            share_nm = share_nm.lower()
+            if not amount.isdigit():
+                self.bot.send_message(message.chat.id, 'Некорректное количество',
+                                      reply_markup=self.nested_keyboard_3)
+            elif not parser.share_exists(share_nm):
+                self.bot.send_message(message.chat.id, 'Такой акции нет :(',
+                                      reply_markup=self.nested_keyboard_3)
+            else:
+                added = self.db.add_share(message.chat.id, share_nm, int(amount))
+                if not added:
+                    self.bot.send_message(message.chat.id, 'Ты уже добавлял эту акцию',
+                                          reply_markup=self.nested_keyboard_3)
+                else:
+                    self.bot.send_message(message.chat.id, 'Акция успешно добавлена',
+                                          reply_markup=self.nested_keyboard_3)
 
         def remove_share(message):
             share_nm = message.text
-            # проверка, что такая акция есть в протфеле
-            if db.Database.remove_share(message.chat.id, share_nm): #c параметрами тут косяк явный
-                self.bot.send_message(message.chat.id, 'Акция успешно удалена:)')
+            share_nm = share_nm.lower()
+            removed = self.db.remove_share(message.chat.id, share_nm)
+
+            if not removed:
+                self.bot.send_message(message.chat.id, 'Ты не добавлял такую акцию')
+            else:
+                self.bot.send_message(message.chat.id, 'Акция успешно удалена')
 
         def update_share(message):
+            # check message for 2 arguments
+            space = True
+            counter = 0
+            for i in message.text:
+                if i == ' ' or i == '\n' or i == '\t':
+                    space = True
+                elif space:
+                    space = False
+                    counter += 1
+
+            if counter != 2:
+                self.bot.send_message(message.chat.id, 'Необходимо вводить ровно 2 значения',
+                                      reply_markup=self.nested_keyboard_3)
+                return
+
             share_nm, amount = message.text.split()
-            if int(amount) == 0:
-                self.bot.send_message(message.chat.id, 'Вероятно, вам следует использовать кнопку "Удалить акцию"')
-            # if тоже проверка, что такая акция есть в портфеле and (int(amount) > 0):
-            if db.Database.update_share(message.chat.id, share_nm, amount):
-                self.bot.send_message(message.chat.id, 'Количество успешно обновлено')
-        #TODO smrgn
-        # Ну аналогично предыдущем функциям, реализовать в случае, когда не успешно что-то
-        # + я не сделала проверку на целочисленное, а тупо беру целую часть, тоже не очень решение, подумаю, как пофиксить
-        # пока пушу так, я их не могу тестить, так как функции, которые использую, или не реализованы, или реализованы иначе
+            share_nm = share_nm.lower()
+            if amount == '0':
+                self.bot.send_message(message.chat.id, 'Возможно, ты хочешь удалить акцию. '
+                                                       'Для этого воспользуйся кнопкой Удалить акцию',
+                                      reply_markup=self.nested_keyboard_3)
+            elif not amount.isdigit():
+                self.bot.send_message(message.chat.id, 'Некорректное количество',
+                                      reply_markup=self.nested_keyboard_3)
+            else:
+                changed = self.db.update_share(message.chat.id, share_nm, int(amount))
+                if not changed:
+                    self.bot.send_message(message.chat.id, 'Ты не добавлял такую акцию',
+                                          reply_markup=self.nested_keyboard_3)
+                else:
+                    self.bot.send_message(message.chat.id, 'Количетсво акций обновлено',
+                                          reply_markup=self.nested_keyboard_3)
 
     def start(self):  # метод, срабатывающий при запуске бота
         print('============= BOT START ===============')

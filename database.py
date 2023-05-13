@@ -130,9 +130,12 @@ class Database:
         uid = self.cursor.fetchone()
 
         uid = int(uid[0])
+        print(uid)
+        print(share_nm)
         sql = f'''select user_id, share_nm from user_x_share where user_id = {uid} and share_nm = '{share_nm}';'''
         self.cursor.execute(sql)
         res = self.cursor.fetchone()
+        print(res)
 
         if not res:
             return False
@@ -159,7 +162,7 @@ class Database:
         if not res:
             return 'Shares not added'
 
-        df = pd.DataFrame(res, columns=['share_nm', 'amount'])
+        df = pd.DataFrame(res, columns=['Акция', 'Количество'])
         return df
 
     def reg_user(self, chat_id):

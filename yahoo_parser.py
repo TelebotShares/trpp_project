@@ -30,9 +30,8 @@ def search_by_name(name):
 
 
 def share_exists(share_nm):
-    share = yf.Ticker(share_nm)
-
-    hist = share.history(period="7d", interval='4h', actions=False)
+    share = yf.Ticker(share_nm.upper())
+    hist = share.history(period="7d", interval='5d', actions=False)
 
     if hist.empty:
         return False
