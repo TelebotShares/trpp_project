@@ -79,9 +79,42 @@ class TelebotShares:
         @self.bot.message_handler(commands=['help'])  # просто текстовая команда
         def send_help(message):
             self.bot.send_message(message.chat.id,
-                                  'Здесь будет мое CV. Или можем узнать друг друга поближе в Тиндере.')
-            # TODO smrgn
-            # допиши тут в хелпе красиво про функционал кратко плз (и про то, за что отвечают блоки наши)
+                                  'Сейчас я кратко расскажу о своих возможностях и как нам общаться, чтобы понимать '
+                                  'друг друга &#128522\n\nОколо клавиатуры ты можешь найти кнопки, в основном мы будем '
+                                  'общаться через них :)\n\nЕсли тебе нужна помощь по кнопкам, нажми или набери '
+                                  'команду для\nкнопки «Биржа» /market\nкнопки «Подписки» /subscriptions\n'
+                                  'кнопки «Мой портфель» /portfolio\n\n<i>Часто возникающая проблемка:</i>\n<b>«Я пишу '
+                                  'акцию Apple, а бот отвечает, что такой акции нет, как такое возможно?»</b>\n\n'
+                                  'Мы парсим данные с сайта "Yahoo Finance", поэтому, когда я прошу написать название '
+                                  'акции, я имею в виду её код :)\n\nВот несколько примеров\n'
+                                  '&#10060 Apple = AAPL &#9989\n&#10060 Papa John\'s = PZZA &#9989\n&#10060 '
+                                  'Microsoft = MSFT &#9989\n\nКоды для других акций ты можешь найти по ссылке:\n'
+                                  '<i>скоро тут будет ссылка</i>', parse_mode='html')
+
+        @self.bot.message_handler(commands=['market'])
+        def send_market(message):
+            self.bot.send_message(message.chat.id, '<b>Кнопка «Биржа»</b>\n• Здесь ты можешь найти краткую '
+                                                   'сводку по актуальной ситуации на бирже. Я попрошу тебя ввести '
+                                                   'название акции, после чего верну статистику &#128200',
+                                  parse_mode='html')
+
+        @self.bot.message_handler(commands=['portfolio'])
+        def send_portfolio(message):
+            self.bot.send_message(message.chat.id, '<b>Кнопка «Мой портфель»</b>\n• Здесь ты можешь хранить свои акции,'
+                                                   ' чтобы всегда помнить, какие акции у тебя есть и в каком '
+                                                   'количествe &#128188\n<b>(Важно!)</b> Когда я прошу указать '
+                                                   'название акции и её количество, формат ввода:\n“aapl 10” '
+                                                   '(название, пробел, количество, без кавычек)', parse_mode='html')
+
+        @self.bot.message_handler(commands=['subscriptions'])
+        def send_subscriptions(message):
+            self.bot.send_message(message.chat.id, '<b>Кнопка «Подписки»</b>\n• Здесь ты можешь '
+                                                   'подписаться на рассылку актуальной цены по акциям &#129321 '
+                                                   'Для того чтобы это сделать просто следуй моим указаниям :)\nТакже '
+                                                   'ты можешь проверить свои подписки и отписаться, если какие-то '
+                                                   'перестали быть тебе интересны.\n<b>(Важно!)</b> Если ты хочешь '
+                                                   'изменить время рассылки, тебе необходимо отписаться и оформить '
+                                                   'подписку заново', parse_mode='html')
 
         # Обрабатываем нажатие кнопок
         @self.bot.message_handler(func=lambda message: True)
@@ -89,14 +122,14 @@ class TelebotShares:
             # взаимодействие с клавиатурой
             if message.text == 'Биржа':
                 # Отправляем сообщение и клавиатуру с вложенными кнопками
-                self.bot.send_message(message.chat.id, 'Вы перешли в раздел Биржи', reply_markup=self.nested_keyboard_1)
+                self.bot.send_message(message.chat.id, 'Вы перешли в раздел "Биржа"', reply_markup=self.nested_keyboard_1)
             elif message.text == 'Подписки':
                 # Отправляем сообщение и клавиатуру с вложенными кнопками
-                self.bot.send_message(message.chat.id, 'Вы перешли в раздел Подписок',
+                self.bot.send_message(message.chat.id, 'Вы перешли в раздел "Подписки"',
                                       reply_markup=self.nested_keyboard_2)
             elif message.text == 'Мой портфель':
                 # Отправляем сообщение и клавиатуру с вложенными кнопками
-                self.bot.send_message(message.chat.id, 'Вы перешли в раздел Мой портфель',
+                self.bot.send_message(message.chat.id, 'Вы перешли в раздел "Мой портфель"',
                                       reply_markup=self.nested_keyboard_3)
             elif message.text == 'Назад':
                 self.bot.send_message(message.chat.id, 'Вы вернулись на главный экран',
@@ -104,11 +137,11 @@ class TelebotShares:
 
             # блок подписок
             elif message.text == 'Подписаться':
-                self.bot.send_message(message.chat.id, 'Введите название акции, на которую оформляете подписки')
+                self.bot.send_message(message.chat.id, 'Введите название акции, на которую хотите оформить подписку')
                 self.bot.register_next_step_handler(message, subscribe)  # переход к след действию
 
             elif message.text == 'Отписаться':
-                self.bot.send_message(message.chat.id, 'Введите название акции,от которой хотите отписаться')
+                self.bot.send_message(message.chat.id, 'Введите название акции, от которой хотите отписаться')
                 self.bot.register_next_step_handler(message, unsubscribe)  # переход к след действию
 
             elif message.text == 'Мои подписки':
@@ -131,11 +164,12 @@ class TelebotShares:
 
             # блок Мой портфель
             elif message.text == 'Добавить акцию':
-                self.bot.send_message(message.chat.id, 'Введите название акции и её количество')
+                self.bot.send_message(message.chat.id, 'Введите название акции, которую хотите добавить,'
+                                                       ' и её количество')
                 self.bot.register_next_step_handler(message, add_share)
 
             elif message.text == 'Удалить акцию':
-                self.bot.send_message(message.chat.id, 'Введите название акции')
+                self.bot.send_message(message.chat.id, 'Введите название акции, которую хотите удалить')
                 self.bot.register_next_step_handler(message, remove_share)
 
             elif message.text == 'Изменить количество':
@@ -175,7 +209,7 @@ class TelebotShares:
             share_nm = message.text.lower()
 
             if self.db.sub_exists(message.chat.id, share_nm):
-                self.bot.send_message(message.chat.id, 'У тебя уже есть подписка на эту акцию')
+                self.bot.send_message(message.chat.id, 'У тебя уже есть подписка на эту акцию :)')
             else:
                 share_found = parser.share_exists(share_nm)
                 if not share_found:
@@ -189,10 +223,10 @@ class TelebotShares:
             share_nm = message.text.lower()
 
             if not self.db.sub_exists(message.chat.id, share_nm):
-                self.bot.send_message(message.chat.id, 'У тебя нет подписки на эту акцию')
+                self.bot.send_message(message.chat.id, 'У тебя нет подписки на эту акцию :(')
             else:
                 self.db.unsubscribe(message.chat.id, share_nm)
-                self.bot.send_message(message.chat.id, 'Вы успешно отписались',
+                self.bot.send_message(message.chat.id, 'Вы успешно отписались!',
                                       reply_markup=self.nested_keyboard_2)
 
         def subscribe_next(message, share_nm):
@@ -234,10 +268,10 @@ class TelebotShares:
             else:
                 added = self.db.add_share(message.chat.id, share_nm, int(amount))
                 if not added:
-                    self.bot.send_message(message.chat.id, 'Ты уже добавлял эту акцию',
+                    self.bot.send_message(message.chat.id, 'Ты уже добавлял эту акцию :)',
                                           reply_markup=self.nested_keyboard_3)
                 else:
-                    self.bot.send_message(message.chat.id, 'Акция успешно добавлена',
+                    self.bot.send_message(message.chat.id, 'Акция успешно добавлена!',
                                           reply_markup=self.nested_keyboard_3)
 
         def remove_share(message):
@@ -246,9 +280,9 @@ class TelebotShares:
             removed = self.db.remove_share(message.chat.id, share_nm)
 
             if not removed:
-                self.bot.send_message(message.chat.id, 'Ты не добавлял такую акцию')
+                self.bot.send_message(message.chat.id, 'Ты не добавлял такую акцию :(')
             else:
-                self.bot.send_message(message.chat.id, 'Акция успешно удалена')
+                self.bot.send_message(message.chat.id, 'Акция успешно удалена!')
 
         def update_share(message):
             # check message for 2 arguments
@@ -270,7 +304,7 @@ class TelebotShares:
             share_nm = share_nm.lower()
             if amount == '0':
                 self.bot.send_message(message.chat.id, 'Возможно, ты хочешь удалить акцию. '
-                                                       'Для этого воспользуйся кнопкой Удалить акцию',
+                                                       'Для этого воспользуйся кнопкой "Удалить акцию"',
                                       reply_markup=self.nested_keyboard_3)
             elif not amount.isdigit():
                 self.bot.send_message(message.chat.id, 'Некорректное количество',
@@ -278,10 +312,10 @@ class TelebotShares:
             else:
                 changed = self.db.update_share(message.chat.id, share_nm, int(amount))
                 if not changed:
-                    self.bot.send_message(message.chat.id, 'Ты не добавлял такую акцию',
+                    self.bot.send_message(message.chat.id, 'Ты не добавлял такую акцию :(',
                                           reply_markup=self.nested_keyboard_3)
                 else:
-                    self.bot.send_message(message.chat.id, 'Количетсво акций обновлено',
+                    self.bot.send_message(message.chat.id, 'Количетсво акций обновлено!',
                                           reply_markup=self.nested_keyboard_3)
 
     def send_subs_10(self):
