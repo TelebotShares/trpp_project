@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app &mdash; telebotshares Documentation 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            telebotshares Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">trpp_project</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">telebotshares Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">telebot</span>
+<span class="kn">import</span> <span class="nn">schedule</span>
+<span class="kn">import</span> <span class="nn">yahoo_parser</span> <span class="k">as</span> <span class="nn">parser</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+
+<div class="viewcode-block" id="start_scheduler"><a class="viewcode-back" href="../app.html#app.start_scheduler">[docs]</a><span class="k">def</span> <span class="nf">start_scheduler</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts scheduler for subscriptions delivery.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">schedule</span><span class="o">.</span><span class="n">run_pending</span><span class="p">()</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span></div>
+
+
+<span class="c1"># Класс, реализующий функционал бота</span>
+<div class="viewcode-block" id="TelebotShares"><a class="viewcode-back" href="../app.html#app.TelebotShares">[docs]</a><span class="k">class</span> <span class="nc">TelebotShares</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Class with bot functionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>  <span class="c1"># инициализация</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Bot constructor - sets up bot, adds handlers.</span>
+<span class="sd">        :param str token: bot token,</span>
+<span class="sd">        :param db: database object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;============= BOT SET UP ===============&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">TeleBot</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+
+        <span class="c1"># Main keyboard</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keyboard</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">ReplyKeyboardMarkup</span><span class="p">(</span><span class="n">row_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">resize_keyboard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button1</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Биржа&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button2</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Подписки&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button3</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Мой портфель&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keyboard</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">button1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">button2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">button3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_button</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Назад&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Кнопка Биржа</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_1</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">ReplyKeyboardMarkup</span><span class="p">(</span><span class="n">row_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">resize_keyboard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button11</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Поиск по акции&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_button11</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_button</span><span class="p">)</span>
+
+        <span class="c1"># Кнопка Подписки</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">ReplyKeyboardMarkup</span><span class="p">(</span><span class="n">row_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">resize_keyboard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button21</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Подписаться&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button22</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Отписаться&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button23</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Мои подписки&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_button21</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nested_button22</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nested_button23</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">return_button</span><span class="p">)</span>
+
+        <span class="c1"># Кнопка Мой портфель</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">ReplyKeyboardMarkup</span><span class="p">(</span><span class="n">row_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">resize_keyboard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button31</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Добавить акцию&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button32</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Удалить акцию&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button33</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Изменить количество&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_button34</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;Мои акции&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_button31</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nested_button32</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nested_button33</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">nested_button34</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_button</span><span class="p">)</span>
+
+        <span class="c1"># Выбор времени (функционал Подписок)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_keyboard</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">ReplyKeyboardMarkup</span><span class="p">(</span><span class="n">row_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">resize_keyboard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_1</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;10:00&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_2</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;14:00&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_3</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;18:00&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_4</span> <span class="o">=</span> <span class="n">telebot</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">KeyboardButton</span><span class="p">(</span><span class="s1">&#39;22:00&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_keyboard</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timebutton_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_2</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timebutton_4</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_handlers</span><span class="p">()</span>  <span class="c1"># Добавляет обработчики сообщений</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Bot is set up&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TelebotShares.add_handlers"><a class="viewcode-back" href="../app.html#app.TelebotShares.add_handlers">[docs]</a>    <span class="k">def</span> <span class="nf">add_handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># обработчики сообщений</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds message handlers to bot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nd">@self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">message_handler</span><span class="p">(</span><span class="n">commands</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">])</span>
+        <span class="k">def</span> <span class="nf">send_welcome</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            /start command handler.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                  <span class="s1">&#39;Привет, Акционер! Давай познакомимся поближе - напиши команду /help&#39;</span><span class="p">,</span>
+                                  <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">keyboard</span><span class="p">)</span>
+
+            <span class="c1"># register new user</span>
+            <span class="n">chat_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">reg_user</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
+
+        <span class="nd">@self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">message_handler</span><span class="p">(</span><span class="n">commands</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">])</span>  <span class="c1"># просто текстовая команда</span>
+        <span class="k">def</span> <span class="nf">send_help</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            /help command handler</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                  <span class="s1">&#39;Сейчас я кратко расскажу о своих возможностях и как нам общаться, чтобы понимать &#39;</span>
+                                  <span class="s1">&#39;друг друга &amp;#128522</span><span class="se">\n\n</span><span class="s1">Около клавиатуры ты можешь найти кнопки, в основном мы будем &#39;</span>
+                                  <span class="s1">&#39;общаться через них :)</span><span class="se">\n\n</span><span class="s1">Если тебе нужна помощь по кнопкам, нажми или набери &#39;</span>
+                                  <span class="s1">&#39;команду для</span><span class="se">\n</span><span class="s1">кнопки «Биржа» /market</span><span class="se">\n</span><span class="s1">кнопки «Подписки» /subscriptions</span><span class="se">\n</span><span class="s1">&#39;</span>
+                                  <span class="s1">&#39;кнопки «Мой портфель» /portfolio</span><span class="se">\n\n</span><span class="s1">&lt;i&gt;Часто возникающая проблемка:&lt;/i&gt;</span><span class="se">\n</span><span class="s1">&lt;b&gt;«Я пишу &#39;</span>
+                                  <span class="s1">&#39;акцию Apple, а бот отвечает, что такой акции нет, как такое возможно?»&lt;/b&gt;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+                                  <span class="s1">&#39;Мы парсим данные с сайта &quot;Yahoo Finance&quot;, поэтому, когда я прошу написать название &#39;</span>
+                                  <span class="s1">&#39;акции, я имею в виду её код :)</span><span class="se">\n\n</span><span class="s1">Вот несколько примеров</span><span class="se">\n</span><span class="s1">&#39;</span>
+                                  <span class="s1">&#39;&amp;#10060 Apple = AAPL &amp;#9989</span><span class="se">\n</span><span class="s1">&amp;#10060 Papa John</span><span class="se">\&#39;</span><span class="s1">s = PZZA &amp;#9989</span><span class="se">\n</span><span class="s1">&amp;#10060 &#39;</span>
+                                  <span class="s1">&#39;Microsoft = MSFT &amp;#9989</span><span class="se">\n\n</span><span class="s1">Коды для других акций ты можешь найти по ссылке:</span><span class="se">\n</span><span class="s1">&#39;</span>
+                                  <span class="s1">&#39;&lt;i&gt;скоро тут будет ссылка&lt;/i&gt;&#39;</span><span class="p">,</span> <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)</span>
+
+        <span class="nd">@self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">message_handler</span><span class="p">(</span><span class="n">commands</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;market&#39;</span><span class="p">])</span>
+        <span class="k">def</span> <span class="nf">send_market</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;&lt;b&gt;Кнопка «Биржа»&lt;/b&gt;</span><span class="se">\n</span><span class="s1">• Здесь ты можешь найти краткую &#39;</span>
+                                                   <span class="s1">&#39;сводку по актуальной ситуации на бирже. Я попрошу тебя ввести &#39;</span>
+                                                   <span class="s1">&#39;название акции, после чего верну статистику &amp;#128200&#39;</span><span class="p">,</span>
+                                  <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)</span>
+
+        <span class="nd">@self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">message_handler</span><span class="p">(</span><span class="n">commands</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;portfolio&#39;</span><span class="p">])</span>
+        <span class="k">def</span> <span class="nf">send_portfolio</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;&lt;b&gt;Кнопка «Мой портфель»&lt;/b&gt;</span><span class="se">\n</span><span class="s1">• Здесь ты можешь хранить свои акции,&#39;</span>
+                                                   <span class="s1">&#39; чтобы всегда помнить, какие акции у тебя есть и в каком &#39;</span>
+                                                   <span class="s1">&#39;количествe &amp;#128188</span><span class="se">\n</span><span class="s1">&lt;b&gt;(Важно!)&lt;/b&gt; Когда я прошу указать &#39;</span>
+                                                   <span class="s1">&#39;название акции и её количество, формат ввода:</span><span class="se">\n</span><span class="s1">“aapl 10” &#39;</span>
+                                                   <span class="s1">&#39;(название, пробел, количество, без кавычек)&#39;</span><span class="p">,</span> <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)</span>
+
+        <span class="nd">@self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">message_handler</span><span class="p">(</span><span class="n">commands</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subscriptions&#39;</span><span class="p">])</span>
+        <span class="k">def</span> <span class="nf">send_subscriptions</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;&lt;b&gt;Кнопка «Подписки»&lt;/b&gt;</span><span class="se">\n</span><span class="s1">• Здесь ты можешь &#39;</span>
+                                                   <span class="s1">&#39;подписаться на рассылку актуальной цены по акциям &amp;#129321 &#39;</span>
+                                                   <span class="s1">&#39;Для того чтобы это сделать просто следуй моим указаниям :)</span><span class="se">\n</span><span class="s1">Также &#39;</span>
+                                                   <span class="s1">&#39;ты можешь проверить свои подписки и отписаться, если какие-то &#39;</span>
+                                                   <span class="s1">&#39;перестали быть тебе интересны.</span><span class="se">\n</span><span class="s1">&lt;b&gt;(Важно!)&lt;/b&gt; Если ты хочешь &#39;</span>
+                                                   <span class="s1">&#39;изменить время рассылки, тебе необходимо отписаться и оформить &#39;</span>
+                                                   <span class="s1">&#39;подписку заново&#39;</span><span class="p">,</span> <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Обрабатываем нажатие кнопок</span>
+        <span class="nd">@self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">message_handler</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">message</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">handle_message</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            All interactions with user with keyboard.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># взаимодействие с клавиатурой</span>
+            <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Биржа&#39;</span><span class="p">:</span>
+                <span class="c1"># Отправляем сообщение и клавиатуру с вложенными кнопками</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Вы перешли в раздел &quot;Биржа&quot;&#39;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Подписки&#39;</span><span class="p">:</span>
+                <span class="c1"># Отправляем сообщение и клавиатуру с вложенными кнопками</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Вы перешли в раздел &quot;Подписки&quot;&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Мой портфель&#39;</span><span class="p">:</span>
+                <span class="c1"># Отправляем сообщение и клавиатуру с вложенными кнопками</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Вы перешли в раздел &quot;Мой портфель&quot;&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Назад&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Вы вернулись на главный экран&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">keyboard</span><span class="p">)</span>
+
+            <span class="c1"># блок подписок</span>
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Подписаться&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Введите название акции, на которую хотите оформить подписку&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">subscribe</span><span class="p">)</span>  <span class="c1"># переход к след действию</span>
+
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Отписаться&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Введите название акции, от которой хотите отписаться&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">unsubscribe</span><span class="p">)</span>  <span class="c1"># переход к след действию</span>
+
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Мои подписки&#39;</span><span class="p">:</span>
+                <span class="n">subs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_subscriptions</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">subs</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;У вас нет подписок :(&#39;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">subs</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;Время рассылки&#39;</span><span class="p">])</span>
+                    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Время рассылки&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Время рассылки&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%H:%M&#39;</span><span class="p">)</span>
+                    <span class="n">table</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">,</span> <span class="n">showindex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Список ваших подписок:</span><span class="se">\n</span><span class="s1">&lt;pre&gt;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span><span class="p">,</span>
+                                          <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;HTML&#39;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span><span class="p">)</span>
+
+            <span class="c1"># блок Биржи</span>
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Поиск по акции&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Введите название акции&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">share_stat</span><span class="p">)</span>  <span class="c1"># переход к след действию</span>
+
+            <span class="c1"># блок Мой портфель</span>
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Добавить акцию&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Введите название акции, которую хотите добавить,&#39;</span>
+                                                       <span class="s1">&#39; и её количество&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">add_share</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Удалить акцию&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Введите название акции, которую хотите удалить&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">remove_share</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Изменить количество&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Введите название акции и актуальное количество&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">update_share</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;Мои акции&#39;</span><span class="p">:</span>
+                <span class="c1"># получаем данные о портфеле из базы данных</span>
+                <span class="n">portfolio_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_portfolio</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+                <span class="c1"># если это не датафрейм просим пользователя сначала добавить акции в портфель</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">portfolio_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Для удобного отображения вашего портфеля акций сначала &#39;</span>
+                                                           <span class="s1">&#39;заполните информацию о нём&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">portfolio_data</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">portfolio_data</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                    <span class="n">table</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">portfolio_data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">,</span> <span class="n">showindex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Список ваших акций:</span><span class="se">\n</span><span class="s1">&lt;pre&gt;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span><span class="p">,</span>
+                                          <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;HTML&#39;</span><span class="p">,</span> <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Отправляем сообщение и клавиатуру с основными кнопками</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                      <span class="s1">&#39;Я еще не научился читать мысли, а такой команды не знаю :(&#39;</span>
+                                      <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Возможно, тебе стоит заглянуть в /help&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">keyboard</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">share_stat</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Sends share statistics to user.</span>
+
+<span class="sd">            :param message: share name</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">pic</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">search_by_name</span><span class="p">(</span><span class="n">share_nm</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_photo</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">pic</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Такой акции нет :(&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">subscribe</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Starts adding subscription and checks for validness of operation.</span>
+
+<span class="sd">            :param message: share name</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">sub_exists</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;У тебя уже есть подписка на эту акцию :)&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">share_found</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">share_exists</span><span class="p">(</span><span class="n">share_nm</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">share_found</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Такой акции нет :(&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Выберите время рассылки&#39;</span><span class="p">,</span>
+                                          <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_keyboard</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">register_next_step_handler</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">subscribe_next</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">unsubscribe</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Removes subscription and checks for validness of operation.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">sub_exists</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;У тебя нет подписки на эту акцию :(&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Вы успешно отписались!&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">subscribe_next</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Adds subscription and reads delivery time from user.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :param str share_nm: share name</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">chat_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span>
+
+            <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;10:00&#39;</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;14:00&#39;</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;18:00&#39;</span> <span class="ow">or</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;22:00&#39;</span><span class="p">:</span>
+                <span class="n">delivery_tm</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">sub_add</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">,</span> <span class="n">delivery_tm</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Вы успешно подписались!&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">keyboard</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Некорректное время&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_2</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">add_share</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Adds share and checks for validness of operation.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># check message for 2 arguments</span>
+            <span class="n">space</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">:</span>
+                    <span class="n">space</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">space</span><span class="p">:</span>
+                    <span class="n">space</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">counter</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Необходимо вводить ровно 2 значения&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="n">share_nm</span><span class="p">,</span> <span class="n">amount</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">share_nm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">amount</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Некорректное количество&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">parser</span><span class="o">.</span><span class="n">share_exists</span><span class="p">(</span><span class="n">share_nm</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Такой акции нет :(&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">added</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">add_share</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">added</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Ты уже добавлял эту акцию :)&#39;</span><span class="p">,</span>
+                                          <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Акция успешно добавлена!&#39;</span><span class="p">,</span>
+                                          <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">remove_share</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Removes share and check for validness of operation.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">share_nm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">removed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">remove_share</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">removed</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Ты не добавлял такую акцию :(&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Акция успешно удалена!&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">update_share</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Updates share amount and checks for validness of operation.</span>
+
+<span class="sd">            :param message: user message</span>
+<span class="sd">            :rtype: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># check message for 2 arguments</span>
+            <span class="n">space</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">:</span>
+                    <span class="n">space</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">space</span><span class="p">:</span>
+                    <span class="n">space</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">counter</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Необходимо вводить ровно 2 значения&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="n">share_nm</span><span class="p">,</span> <span class="n">amount</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">share_nm</span> <span class="o">=</span> <span class="n">share_nm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">amount</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Возможно, ты хочешь удалить акцию. &#39;</span>
+                                                       <span class="s1">&#39;Для этого воспользуйся кнопкой &quot;Удалить акцию&quot;&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">amount</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Некорректное количество&#39;</span><span class="p">,</span>
+                                      <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">update_share</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">changed</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Ты не добавлял такую акцию :(&#39;</span><span class="p">,</span>
+                                          <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;Количетсво акций обновлено!&#39;</span><span class="p">,</span>
+                                          <span class="n">reply_markup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nested_keyboard_3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TelebotShares.send_subs_10"><a class="viewcode-back" href="../app.html#app.TelebotShares.send_subs_10">[docs]</a>    <span class="k">def</span> <span class="nf">send_subs_10</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends subs at 10:00.</span>
+
+<span class="sd">        :rype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_schedule</span><span class="p">(</span><span class="s1">&#39;10:00&#39;</span><span class="p">)</span>  <span class="c1"># return chat_id + share_nm</span>
+
+        <span class="n">shares</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;share_nm&#39;</span><span class="p">])</span>
+        <span class="n">shares_info</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">actual_info</span><span class="p">(</span><span class="n">shares</span><span class="p">)</span>  <span class="c1"># return share_nm + price</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shares_info</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;share_nm&#39;</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;share_nm&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">,</span> <span class="s1">&#39;share_nm&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">])</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;share_nm&#39;</span><span class="p">:</span> <span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="s1">&#39;Цена&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">chats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">chat</span> <span class="ow">in</span> <span class="n">chats</span><span class="p">:</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">res</span><span class="p">[(</span><span class="n">res</span><span class="o">.</span><span class="n">chat_id</span> <span class="o">==</span> <span class="n">chat</span><span class="p">)]</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;Цена&#39;</span><span class="p">])</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">,</span> <span class="n">showindex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Рассылка по вашей подписке:</span><span class="se">\n</span><span class="s1">&lt;pre&gt;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span><span class="p">,</span>
+                                  <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;HTML&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TelebotShares.send_subs_14"><a class="viewcode-back" href="../app.html#app.TelebotShares.send_subs_14">[docs]</a>    <span class="k">def</span> <span class="nf">send_subs_14</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends subs at 14:00.</span>
+
+<span class="sd">        :rype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_schedule</span><span class="p">(</span><span class="s1">&#39;14:00&#39;</span><span class="p">)</span>  <span class="c1"># return chat_id + share_nm</span>
+
+        <span class="n">shares</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;share_nm&#39;</span><span class="p">])</span>
+        <span class="n">shares_info</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">actual_info</span><span class="p">(</span><span class="n">shares</span><span class="p">)</span>  <span class="c1"># return share_nm + price</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shares_info</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;share_nm&#39;</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;share_nm&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">,</span> <span class="s1">&#39;share_nm&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">])</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;share_nm&#39;</span><span class="p">:</span> <span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="s1">&#39;Цена&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">chats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">chat</span> <span class="ow">in</span> <span class="n">chats</span><span class="p">:</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">res</span><span class="p">[(</span><span class="n">res</span><span class="o">.</span><span class="n">chat_id</span> <span class="o">==</span> <span class="n">chat</span><span class="p">)]</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;Цена&#39;</span><span class="p">])</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">,</span> <span class="n">showindex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Рассылка по вашей подписке:</span><span class="se">\n</span><span class="s1">&lt;pre&gt;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span><span class="p">,</span>
+                                  <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;HTML&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TelebotShares.send_subs_18"><a class="viewcode-back" href="../app.html#app.TelebotShares.send_subs_18">[docs]</a>    <span class="k">def</span> <span class="nf">send_subs_18</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends subs at 18:00.</span>
+
+<span class="sd">        :rype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_schedule</span><span class="p">(</span><span class="s1">&#39;18:00&#39;</span><span class="p">)</span>  <span class="c1"># return chat_id + share_nm</span>
+
+        <span class="n">shares</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;share_nm&#39;</span><span class="p">])</span>
+        <span class="n">shares_info</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">actual_info</span><span class="p">(</span><span class="n">shares</span><span class="p">)</span>  <span class="c1"># return share_nm + price</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shares_info</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;share_nm&#39;</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;share_nm&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">,</span> <span class="s1">&#39;share_nm&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">])</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;share_nm&#39;</span><span class="p">:</span> <span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="s1">&#39;Цена&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">chats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">chat</span> <span class="ow">in</span> <span class="n">chats</span><span class="p">:</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">res</span><span class="p">[(</span><span class="n">res</span><span class="o">.</span><span class="n">chat_id</span> <span class="o">==</span> <span class="n">chat</span><span class="p">)]</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;Цена&#39;</span><span class="p">])</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">,</span> <span class="n">showindex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Рассылка по вашей подписке:</span><span class="se">\n</span><span class="s1">&lt;pre&gt;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span><span class="p">,</span>
+                                  <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;HTML&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TelebotShares.send_subs_22"><a class="viewcode-back" href="../app.html#app.TelebotShares.send_subs_22">[docs]</a>    <span class="k">def</span> <span class="nf">send_subs_22</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends subs at 22:00.</span>
+
+<span class="sd">        :rype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_schedule</span><span class="p">(</span><span class="s1">&#39;22:00&#39;</span><span class="p">)</span>  <span class="c1"># return chat_id + share_nm</span>
+
+        <span class="n">shares</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;share_nm&#39;</span><span class="p">])</span>
+        <span class="n">shares_info</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">actual_info</span><span class="p">(</span><span class="n">shares</span><span class="p">)</span>  <span class="c1"># return share_nm + price</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shares_info</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;share_nm&#39;</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;share_nm&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">,</span> <span class="s1">&#39;share_nm&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">])</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;share_nm&#39;</span><span class="p">:</span> <span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="s1">&#39;Цена&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">chats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">chat</span> <span class="ow">in</span> <span class="n">chats</span><span class="p">:</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">res</span><span class="p">[(</span><span class="n">res</span><span class="o">.</span><span class="n">chat_id</span> <span class="o">==</span> <span class="n">chat</span><span class="p">)]</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;Цена&#39;</span><span class="p">])</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">,</span> <span class="n">showindex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Рассылка по вашей подписке:</span><span class="se">\n</span><span class="s1">&lt;pre&gt;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span><span class="p">,</span>
+                                  <span class="n">parse_mode</span><span class="o">=</span><span class="s1">&#39;HTML&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TelebotShares.start_planning"><a class="viewcode-back" href="../app.html#app.TelebotShares.start_planning">[docs]</a>    <span class="k">def</span> <span class="nf">start_planning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts planning subscriptions delivery.</span>
+
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">()</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="s1">&#39;10:00&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_subs_10</span><span class="p">)</span>
+        <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">()</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="s1">&#39;14:00&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_subs_14</span><span class="p">)</span>
+        <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">()</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="s1">&#39;18:00&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_subs_18</span><span class="p">)</span>
+        <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">()</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="s1">&#39;22:00&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_subs_22</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TelebotShares.start"><a class="viewcode-back" href="../app.html#app.TelebotShares.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># метод, срабатывающий при запуске бота</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start the bot and runs the scheduler in separate thread.</span>
+
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;============= BOT START ===============&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Bot is starting...&#39;</span><span class="p">)</span>
+        <span class="c1"># запуск планировщика</span>
+        <span class="n">scheduler_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">start_scheduler</span><span class="p">)</span>
+        <span class="n">scheduler_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># планирование рассылки</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_planning</span><span class="p">()</span>
+
+        <span class="c1"># запуск бота</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">infinity_polling</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;============= BOT STOP ===============&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, rybrix.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

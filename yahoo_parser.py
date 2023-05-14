@@ -7,6 +7,13 @@ import io
 
 
 def search_by_name(name):
+  """
+    Plots share history.
+
+    :param str name: share name
+    :return: Plot of share history
+    :rtype: io.BytesIO or None
+    """
 
     if not share_exists(name):
         return
@@ -47,6 +54,13 @@ def search_by_name(name):
 
 
 def share_exists(share_nm):
+    """
+        Check for share existence.
+
+        :param str share_nm: share name
+        :return: Existence of share with such name
+        :rtype: bool
+        """
     share = yf.Ticker(share_nm.upper())
 
     try:
@@ -62,6 +76,13 @@ def share_exists(share_nm):
 
 
 def actual_info(shares):
+    """
+        Gets the latest close price of shares.
+
+        :param list[str] shares: names of shares
+        :return: Table with shares and prices
+        :rtype: pd.DataFrame
+        """
     tickers = shares
     res = []
     for ticker in tickers:
