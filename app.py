@@ -8,6 +8,9 @@ import time
 
 
 def start_scheduler():
+    """
+        Starts scheduler for subscriptions delivery.
+    """
     while True:
         schedule.run_pending()
         time.sleep(1*60)
@@ -15,7 +18,17 @@ def start_scheduler():
 
 # Класс, реализующий функционал бота
 class TelebotShares:
+    """
+        Class with bot functionality.
+    """
+
     def __init__(self, token, db):  # инициализация
+        """
+        Bot constructor - sets up bot, adds handlers.
+        :param str token: bot token,
+        :param db: database object
+        """
+
         print('============= BOT SET UP ===============')
         self.bot = telebot.TeleBot(token=token)
         self.db = db
@@ -66,8 +79,17 @@ class TelebotShares:
         print('Bot is set up')
 
     def add_handlers(self):  # обработчики сообщений
+        """
+        Adds message handlers to bot.
+        """
         @self.bot.message_handler(commands=['start'])
         def send_welcome(message):
+            """
+            /start command handler.
+
+            :param message: user message
+            :rtype: None
+            """
             self.bot.send_message(message.chat.id,
                                   'Привет, Акционер! Давай познакомимся поближе - напиши команду /help',
                                   reply_markup=self.keyboard)
@@ -78,6 +100,12 @@ class TelebotShares:
 
         @self.bot.message_handler(commands=['help'])  # просто текстовая команда
         def send_help(message):
+            """
+            /help command handler
+
+            :param message: user message
+            :rtype: None
+            """
             self.bot.send_message(message.chat.id,
                                   'Сейчас я кратко расскажу о своих возможностях и как нам общаться, чтобы понимать '
                                   'друг друга &#128522\n\nОколо клавиатуры ты можешь найти кнопки, в основном мы будем '
@@ -119,6 +147,12 @@ class TelebotShares:
         # Обрабатываем нажатие кнопок
         @self.bot.message_handler(func=lambda message: True)
         def handle_message(message):
+            """
+            All interactions with user with keyboard.
+
+            :param message: user message
+            :rtype: None
+            """
             # взаимодействие с клавиатурой
             if message.text == 'Биржа':
                 # Отправляем сообщение и клавиатуру с вложенными кнопками
@@ -198,6 +232,12 @@ class TelebotShares:
                                       reply_markup=self.keyboard)
 
         def share_stat(message):
+            """
+            Sends share statistics to user.
+
+            :param message: share name
+            :rtype: None
+            """
             share_nm = message.text.lower()
             pic = parser.search_by_name(share_nm)
             if pic is not None:
@@ -206,6 +246,12 @@ class TelebotShares:
                 self.bot.send_message(message.chat.id, 'Такой акции нет :(')
 
         def subscribe(message):
+            """
+            Starts adding subscription and checks for validness of operation.
+
+            :param message: share name
+            :rtype: None
+            """
             share_nm = message.text.lower()
 
             if self.db.sub_exists(message.chat.id, share_nm):
@@ -220,6 +266,12 @@ class TelebotShares:
                     self.bot.register_next_step_handler(message, subscribe_next, share_nm)
 
         def unsubscribe(message):
+            """
+            Removes subscription and checks for validness of operation.
+
+            :param message: user message
+            :rtype: None
+            """
             share_nm = message.text.lower()
 
             if not self.db.sub_exists(message.chat.id, share_nm):
@@ -230,6 +282,13 @@ class TelebotShares:
                                       reply_markup=self.nested_keyboard_2)
 
         def subscribe_next(message, share_nm):
+            """
+            Adds subscription and reads delivery time from user.
+
+            :param message: user message
+            :param str share_nm: share name
+            :rtype: None
+            """
             chat_id = message.chat.id
 
             if message.text == '10:00' or message.text == '14:00' or message.text == '18:00' or message.text == '22:00':
@@ -242,6 +301,12 @@ class TelebotShares:
                                       reply_markup=self.nested_keyboard_2)
 
         def add_share(message):
+            """
+            Adds share and checks for validness of operation.
+
+            :param message: user message
+            :rtype: None
+            """
             # check message for 2 arguments
             space = True
             counter = 0
@@ -275,6 +340,12 @@ class TelebotShares:
                                           reply_markup=self.nested_keyboard_3)
 
         def remove_share(message):
+            """
+            Removes share and check for validness of operation.
+
+            :param message: user message
+            :rtype: None
+            """
             share_nm = message.text
             share_nm = share_nm.lower()
             removed = self.db.remove_share(message.chat.id, share_nm)
@@ -285,6 +356,12 @@ class TelebotShares:
                 self.bot.send_message(message.chat.id, 'Акция успешно удалена!')
 
         def update_share(message):
+            """
+            Updates share amount and checks for validness of operation.
+
+            :param message: user message
+            :rtype: None
+            """
             # check message for 2 arguments
             space = True
             counter = 0
@@ -319,6 +396,11 @@ class TelebotShares:
                                           reply_markup=self.nested_keyboard_3)
 
     def send_subs_10(self):
+        """
+        Sends subs at 10:00.
+
+        :rype: None
+        """
         data = self.db.get_schedule('10:00')  # return chat_id + share_nm
 
         shares = pd.unique(data['share_nm'])
@@ -337,6 +419,11 @@ class TelebotShares:
                                   parse_mode='HTML')
 
     def send_subs_14(self):
+        """
+        Sends subs at 14:00.
+
+        :rype: None
+        """
         data = self.db.get_schedule('14:00')  # return chat_id + share_nm
 
         shares = pd.unique(data['share_nm'])
@@ -355,6 +442,11 @@ class TelebotShares:
                                   parse_mode='HTML')
 
     def send_subs_18(self):
+        """
+        Sends subs at 18:00.
+
+        :rype: None
+        """
         data = self.db.get_schedule('18:00')  # return chat_id + share_nm
 
         shares = pd.unique(data['share_nm'])
@@ -373,6 +465,11 @@ class TelebotShares:
                                   parse_mode='HTML')
 
     def send_subs_22(self):
+        """
+        Sends subs at 22:00.
+
+        :rype: None
+        """
         data = self.db.get_schedule('22:00')  # return chat_id + share_nm
 
         shares = pd.unique(data['share_nm'])
@@ -391,12 +488,22 @@ class TelebotShares:
                                   parse_mode='HTML')
 
     def start_planning(self):
+        """
+        Starts planning subscriptions delivery.
+
+        :rtype: None
+        """
         schedule.every().day.at('10:00').do(self.send_subs_10)
         schedule.every().day.at('14:00').do(self.send_subs_14)
         schedule.every().day.at('18:00').do(self.send_subs_18)
         schedule.every().day.at('22:00').do(self.send_subs_22)
 
     def start(self):  # метод, срабатывающий при запуске бота
+        """
+        Start the bot and runs the scheduler in separate thread.
+
+        :rtype: None
+        """
         print('============= BOT START ===============')
         print('Bot is starting...')
         # запуск планировщика

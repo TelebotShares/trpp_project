@@ -1,4 +1,4 @@
-#  Telegram [бот](https://web.telegram.org/a/#6192788119) для трекинга акций
+#  Telegram [бот](https://t.me/telebotshare_bot) для трекинга акций
 [![Typing SVG](https://readme-typing-svg.herokuapp.com?color=%2336BCF7&lines=feat.+YahooFinance)](https://finance.yahoo.com/)
 ## Функционал
 >Трекинг акций всегда под рукой.

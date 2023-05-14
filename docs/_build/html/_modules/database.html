@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>database &mdash; telebotshares Documentation 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            telebotshares Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">trpp_project</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">telebotshares Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">database</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for database</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">psycopg2</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="Database"><a class="viewcode-back" href="../database.html#database.Database">[docs]</a><span class="k">class</span> <span class="nc">Database</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Database class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Database constructor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;============= DATABASE CONNECT ===============&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="o">=</span> <span class="n">psycopg2</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">dbname</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DB_NAME&#39;</span><span class="p">],</span> <span class="n">user</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DB_USER&#39;</span><span class="p">],</span>
+                                     <span class="n">password</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DB_PASS&#39;</span><span class="p">],</span> <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DB_HOST&#39;</span><span class="p">],</span>
+                                     <span class="n">port</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DB_PORT&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">autocommit</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Connected to DB&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Database.test_query"><a class="viewcode-back" href="../database.html#database.Database.test_query">[docs]</a>    <span class="k">def</span> <span class="nf">test_query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Testing communication with database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s1">&#39;select * from tele_user;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="c1"># # Fetching 1st row from the table</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;chat_id&#39;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">df</span><span class="p">))</span></div>
+
+        <span class="c1"># Fetching 1st row from the table</span>
+        <span class="c1"># result = pd.DataFrame(self.cursor.fetchall())</span>
+        <span class="c1"># print(result)</span>
+
+<div class="viewcode-block" id="Database.get_schedule"><a class="viewcode-back" href="../database.html#database.Database.get_schedule">[docs]</a>    <span class="k">def</span> <span class="nf">get_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Gets subscription delivery time from database</span>
+
+<span class="sd">            :param str time: subscription delivery time</span>
+<span class="sd">            :return: Table of chat ids and names of share to deliver</span>
+<span class="sd">            :rtype: pd.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="s1">&#39;:00&#39;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        select </span>
+<span class="s1">            t2.chat_id,</span>
+<span class="s1">            t1.share_nm</span>
+<span class="s1">        from subscription t1</span>
+<span class="s1">            inner join tele_user t2</span>
+<span class="s1">            on t1.user_id = t2.user_id</span>
+<span class="s1">            and t1.delivery_tm = &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s1">&#39;::time;</span>
+<span class="s1">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">,</span> <span class="s1">&#39;share_nm&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="Database.sub_add"><a class="viewcode-back" href="../database.html#database.Database.sub_add">[docs]</a>    <span class="k">def</span> <span class="nf">sub_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">,</span> <span class="n">delivery_tm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Adds subscription to database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :param str share_nm: share name</span>
+<span class="sd">            :param str delivery_tm: subscription delivery_time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">delivery_tm</span> <span class="o">=</span> <span class="n">delivery_tm</span> <span class="o">+</span> <span class="s1">&#39;:00&#39;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        insert into subscription </span>
+<span class="s1">        (user_id, share_nm, delivery_tm)</span>
+<span class="s1">        values (</span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1">, &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;, &#39;</span><span class="si">{</span><span class="n">delivery_tm</span><span class="si">}</span><span class="s1">&#39;::time);</span>
+<span class="s1">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.get_subscriptions"><a class="viewcode-back" href="../database.html#database.Database.get_subscriptions">[docs]</a>    <span class="k">def</span> <span class="nf">get_subscriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Get subscriptions from database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :return: subscriptions info</span>
+<span class="sd">            :rtype: list[tuple]</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;select share_nm, delivery_tm::text from subscription</span>
+<span class="s1">                where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1">&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="Database.unsubscribe"><a class="viewcode-back" href="../database.html#database.Database.unsubscribe">[docs]</a>    <span class="k">def</span> <span class="nf">unsubscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Removes subscription from database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :param str share_nm: share name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        delete from subscription </span>
+<span class="s1">        where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;</span>
+<span class="s1">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.sub_exists"><a class="viewcode-back" href="../database.html#database.Database.sub_exists">[docs]</a>    <span class="k">def</span> <span class="nf">sub_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Checks if subscription exists in database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :param str share_nm: share name</span>
+<span class="sd">            :return: Existence of subscription</span>
+<span class="sd">            :rtype: bool</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;select sub_id from subscription where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Database.add_share"><a class="viewcode-back" href="../database.html#database.Database.add_share">[docs]</a>    <span class="k">def</span> <span class="nf">add_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Adds share to database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :param str share_nm: share name</span>
+<span class="sd">            :param int amount: amount of shares</span>
+<span class="sd">            :return: Status of addition to database</span>
+<span class="sd">            :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;select user_id, share_nm from user_x_share where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        insert into user_x_share</span>
+<span class="s1">        (user_id, share_nm, amount) </span>
+<span class="s1">        values (</span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1">, &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;, </span><span class="si">{</span><span class="n">amount</span><span class="si">}</span><span class="s1">);            </span>
+<span class="s1">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Database.remove_share"><a class="viewcode-back" href="../database.html#database.Database.remove_share">[docs]</a>    <span class="k">def</span> <span class="nf">remove_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Removes share from database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :param str share_nm: share_name</span>
+<span class="sd">            :return: Status of removal from database.</span>
+<span class="sd">            :rtype: bool</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;select user_id, share_nm from user_x_share where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                delete from user_x_share</span>
+<span class="s1">                where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;            </span>
+<span class="s1">                &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Database.update_share"><a class="viewcode-back" href="../database.html#database.Database.update_share">[docs]</a>    <span class="k">def</span> <span class="nf">update_share</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">share_nm</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Update share amount in database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :param str share_nm: share name</span>
+<span class="sd">            :param int amount: new amount of shares</span>
+<span class="sd">            :return: Status of update in database.</span>
+<span class="sd">            :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">share_nm</span><span class="p">)</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;select user_id, share_nm from user_x_share where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                update user_x_share</span>
+<span class="s1">                set amount = </span><span class="si">{</span><span class="n">amount</span><span class="si">}</span><span class="s1"></span>
+<span class="s1">                where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1"> and share_nm = &#39;</span><span class="si">{</span><span class="n">share_nm</span><span class="si">}</span><span class="s1">&#39;;            </span>
+<span class="s1">                &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Database.get_portfolio"><a class="viewcode-back" href="../database.html#database.Database.get_portfolio">[docs]</a>    <span class="k">def</span> <span class="nf">get_portfolio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Return info about user&#39;s shares.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">            :return: Table with user&#39;s shares or unsuccessful status</span>
+<span class="sd">            :rtype: str or pd.DataFrame</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select user_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select share_nm, amount from user_x_share where user_id = </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s1">;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Shares not added&#39;</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Акция&#39;</span><span class="p">,</span> <span class="s1">&#39;Количество&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+<div class="viewcode-block" id="Database.reg_user"><a class="viewcode-back" href="../database.html#database.Database.reg_user">[docs]</a>    <span class="k">def</span> <span class="nf">reg_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Registrate user in database.</span>
+
+<span class="sd">            :param int chat_id: chat id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;select chat_id from tele_user where chat_id = </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">user_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user_try</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;insert into tele_user (chat_id) values(</span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s1">)&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, rybrix.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
