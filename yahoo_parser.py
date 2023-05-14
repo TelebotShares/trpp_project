@@ -1,4 +1,5 @@
 import pandas as pd
+import requests.exceptions
 import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -6,26 +7,41 @@ import io
 
 
 def search_by_name(name):
-    """
+  """
     Plots share history.
 
     :param str name: share name
     :return: Plot of share history
     :rtype: io.BytesIO or None
     """
+
+    if not share_exists(name):
+        return
+
     share = yf.Ticker(name)
     # get stock info
     # print(msft.info)
 
     # get historical market data
-    hist = share.history(period="5d", interval='30m', actions=False)
 
-    if hist.empty:
-        return
+    intervals = ['30m', '1h', '2h', '4h', '8h', '1d']
+    interval = '1d'
+    for interval_temp in intervals:
+        hist = share.history(period="5d", interval=interval_temp, actions=False)
+        if not hist.empty:
+            interval = interval_temp
+            break
+        elif interval_temp == '1d':
+            return
+
+    hist = share.history(period="5d", interval=interval, actions=False)
+
+    hist['Datetime'] = hist.index
+    hist['Datetime'] = hist['Datetime'].dt.tz_convert('Europe/Moscow')
 
     sns.set_style('whitegrid')
     plt.figure(figsize=(12, 6))
-    plt.plot(hist.index, hist['Close'])
+    plt.plot(hist['Datetime'], hist['Close'])
     plt.title = f'Цена на закрытии акции {name} за последние 5 дней'
     plt.xlabel = 'Дата, время'
     plt.ylabel = 'Цена, $'
@@ -46,11 +62,16 @@ def share_exists(share_nm):
         :rtype: bool
         """
     share = yf.Ticker(share_nm.upper())
-    hist = share.history(period="7d", interval='5d', actions=False)
 
-    if hist.empty:
+    try:
+        # attempt to access info
+        info = share.info
+
+    # in case we could find such page
+    except requests.exceptions.HTTPError:
         return False
 
+    # if share exists and we got info about it
     return True
 
 
