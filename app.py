@@ -1,7 +1,16 @@
 import telebot
+import schedule
 import yahoo_parser as parser
 import pandas as pd
 from tabulate import tabulate
+import threading
+import time
+
+
+def start_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(1*60)
 
 
 # Класс, реализующий функционал бота
@@ -71,7 +80,7 @@ class TelebotShares:
         def send_help(message):
             self.bot.send_message(message.chat.id,
                                   'Здесь будет мое CV. Или можем узнать друг друга поближе в Тиндере.')
-            #TODO smrgn
+            # TODO smrgn
             # допиши тут в хелпе красиво про функционал кратко плз (и про то, за что отвечают блоки наши)
 
         # Обрабатываем нажатие кнопок
@@ -275,8 +284,94 @@ class TelebotShares:
                     self.bot.send_message(message.chat.id, 'Количетсво акций обновлено',
                                           reply_markup=self.nested_keyboard_3)
 
+    def send_subs_10(self):
+        data = self.db.get_schedule('10:00')  # return chat_id + share_nm
+
+        shares = pd.unique(data['share_nm'])
+        shares_info = parser.actual_info(shares)  # return share_nm + price
+
+        res = data.join(shares_info.set_index('share_nm'), on='share_nm')
+        res = res.filter(items=['chat_id', 'share_nm', 'price'])
+        res.rename(columns={'share_nm': 'Акция', 'price': 'Цена'}, inplace=True)
+
+        chats = pd.unique(res['chat_id'])
+        for chat in chats:
+            sub = res[(res.chat_id == chat)]
+            sub = sub.filter(items=['Акция', 'Цена'])
+            table = tabulate(sub, headers='keys', tablefmt='orgtbl', showindex=False)
+            self.bot.send_message(chat, f'Рассылка по вашей подписке:\n<pre>{table}</pre>',
+                                  parse_mode='HTML')
+
+    def send_subs_14(self):
+        data = self.db.get_schedule('14:00')  # return chat_id + share_nm
+
+        shares = pd.unique(data['share_nm'])
+        shares_info = parser.actual_info(shares)  # return share_nm + price
+
+        res = data.join(shares_info.set_index('share_nm'), on='share_nm')
+        res = res.filter(items=['chat_id', 'share_nm', 'price'])
+        res.rename(columns={'share_nm': 'Акция', 'price': 'Цена'}, inplace=True)
+
+        chats = pd.unique(res['chat_id'])
+        for chat in chats:
+            sub = res[(res.chat_id == chat)]
+            sub = sub.filter(items=['Акция', 'Цена'])
+            table = tabulate(sub, headers='keys', tablefmt='orgtbl', showindex=False)
+            self.bot.send_message(chat, f'Рассылка по вашей подписке:\n<pre>{table}</pre>',
+                                  parse_mode='HTML')
+
+    def send_subs_18(self):
+        data = self.db.get_schedule('18:00')  # return chat_id + share_nm
+
+        shares = pd.unique(data['share_nm'])
+        shares_info = parser.actual_info(shares)  # return share_nm + price
+
+        res = data.join(shares_info.set_index('share_nm'), on='share_nm')
+        res = res.filter(items=['chat_id', 'share_nm', 'price'])
+        res.rename(columns={'share_nm': 'Акция', 'price': 'Цена'}, inplace=True)
+
+        chats = pd.unique(res['chat_id'])
+        for chat in chats:
+            sub = res[(res.chat_id == chat)]
+            sub = sub.filter(items=['Акция', 'Цена'])
+            table = tabulate(sub, headers='keys', tablefmt='orgtbl', showindex=False)
+            self.bot.send_message(chat, f'Рассылка по вашей подписке:\n<pre>{table}</pre>',
+                                  parse_mode='HTML')
+
+    def send_subs_22(self):
+        data = self.db.get_schedule('22:00')  # return chat_id + share_nm
+
+        shares = pd.unique(data['share_nm'])
+        shares_info = parser.actual_info(shares)  # return share_nm + price
+
+        res = data.join(shares_info.set_index('share_nm'), on='share_nm')
+        res = res.filter(items=['chat_id', 'share_nm', 'price'])
+        res.rename(columns={'share_nm': 'Акция', 'price': 'Цена'}, inplace=True)
+
+        chats = pd.unique(res['chat_id'])
+        for chat in chats:
+            sub = res[(res.chat_id == chat)]
+            sub = sub.filter(items=['Акция', 'Цена'])
+            table = tabulate(sub, headers='keys', tablefmt='orgtbl', showindex=False)
+            self.bot.send_message(chat, f'Рассылка по вашей подписке:\n<pre>{table}</pre>',
+                                  parse_mode='HTML')
+
+    def start_planning(self):
+        schedule.every().day.at('10:00').do(self.send_subs_10)
+        schedule.every().day.at('14:00').do(self.send_subs_14)
+        schedule.every().day.at('18:00').do(self.send_subs_18)
+        schedule.every().day.at('22:00').do(self.send_subs_22)
+
     def start(self):  # метод, срабатывающий при запуске бота
         print('============= BOT START ===============')
         print('Bot is starting...')
+        # запуск планировщика
+        scheduler_thread = threading.Thread(target=start_scheduler)
+        scheduler_thread.start()
+
+        # планирование рассылки
+        self.start_planning()
+
+        # запуск бота
         self.bot.infinity_polling()
         print('============= BOT STOP ===============')

@@ -26,6 +26,22 @@ class Database:
         # result = pd.DataFrame(self.cursor.fetchall())
         # print(result)
 
+    def get_schedule(self, time):
+        time = time + ':00'
+        sql = f'''
+        select 
+            t2.chat_id,
+            t1.share_nm
+        from subscription t1
+            inner join tele_user t2
+            on t1.user_id = t2.user_id
+            and t1.delivery_tm = '{time}'::time;
+        '''
+        self.cursor.execute(sql)
+        res = self.cursor.fetchall()
+        res = pd.DataFrame(res, columns=['chat_id', 'share_nm'])
+        return res
+
     def sub_add(self, chat_id, share_nm, delivery_tm):
         sql = f'select user_id from tele_user where chat_id = {chat_id};'
         self.cursor.execute(sql)
