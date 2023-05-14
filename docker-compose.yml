@@ -1,0 +1,9 @@
+version: "3.4"
+services:
+  bot:
+    image: bot:latest
+    container_name: bot-container
+    build:
+      context: .
+    env_file:
+      - .env

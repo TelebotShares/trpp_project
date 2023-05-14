@@ -1,13 +1,14 @@
 import psycopg2
-import config as cf
 import pandas as pd
+import os
 
 
 class Database:
     def __init__(self):
         print('============= DATABASE CONNECT ===============')
-        self.conn = psycopg2.connect(dbname=cf.DB_NAME, user=cf.DB_USER, password=cf.DB_PASS,
-                                     host=cf.DB_HOST, port=cf.DB_PORT)
+        self.conn = psycopg2.connect(dbname=os.environ['DB_NAME'], user=os.environ['DB_USER'],
+                                     password=os.environ['DB_PASS'], host=os.environ['DB_HOST'],
+                                     port=os.environ['DB_PORT'])
         self.cursor = self.conn.cursor()
         self.conn.autocommit = True
         print("Connected to DB")
