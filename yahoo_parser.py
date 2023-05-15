@@ -1,13 +1,13 @@
 import pandas as pd
 import requests.exceptions
 import yfinance as yf
-import matplotlib.pyplot as plt
-import seaborn as sns
 import io
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 
 
 def search_by_name(name):
-  """
+    """
     Plots share history.
 
     :param str name: share name
@@ -19,38 +19,41 @@ def search_by_name(name):
         return
 
     share = yf.Ticker(name)
-    # get stock info
-    # print(msft.info)
 
     # get historical market data
 
-    intervals = ['30m', '1h', '2h', '4h', '8h', '1d']
-    interval = '1d'
-    for interval_temp in intervals:
-        hist = share.history(period="5d", interval=interval_temp, actions=False)
-        if not hist.empty:
-            interval = interval_temp
-            break
-        elif interval_temp == '1d':
-            return
+    hist = share.history(period="1y", actions=False)
+    if not hist.empty:
+        hist['Datetime'] = hist.index
+        hist['Datetime'] = hist['Datetime'].dt.tz_convert('Europe/Moscow')
+        hist['Datetime'] = hist['Datetime'].dt.strftime("%m/%Y")
 
-    hist = share.history(period="5d", interval=interval, actions=False)
+        hist['diff'] = hist['Close'] - hist['Open']
+        hist.loc[hist['diff'] >= 0, 'color'] = 'green'
+        hist.loc[hist['diff'] < 0, 'color'] = 'red'
 
-    hist['Datetime'] = hist.index
-    hist['Datetime'] = hist['Datetime'].dt.tz_convert('Europe/Moscow')
+        fig3 = make_subplots(specs=[[{"secondary_y": True}]])
+        fig3.add_trace(go.Candlestick(x=hist.index,
+                                      open=hist['Open'],
+                                      high=hist['High'],
+                                      low=hist['Low'],
+                                      close=hist['Close'],
+                                      name='Price'))
+        fig3.add_trace(go.Scatter(x=hist.index, y=hist['Close'].rolling(window=20).mean(),
+                                  name='20 Day MA', marker_color='blue'))
+        fig3.add_trace(go.Bar(x=hist.index, y=hist['Volume'], name='Volume', marker={'color': hist['color']}),
+                       secondary_y=True)
+        fig3.update_yaxes(range=[0, 700000000], secondary_y=True)
+        fig3.update_yaxes(visible=False, secondary_y=True)
+        fig3.update_layout(xaxis_rangeslider_visible=False)  # hide range slider
+        fig3.update_layout(title={'text': name.upper(), 'x': 0.5})
 
-    sns.set_style('whitegrid')
-    plt.figure(figsize=(12, 6))
-    plt.plot(hist['Datetime'], hist['Close'])
-    plt.title = f'Цена на закрытии акции {name} за последние 5 дней'
-    plt.xlabel = 'Дата, время'
-    plt.ylabel = 'Цена, $'
-
-    # save to buffer
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    return buf
+        # save to buffer
+        buf = io.BytesIO()
+        fig3.write_image(buf, format='png')
+        buf.seek(0)
+        return buf
+    return
 
 
 def share_exists(share_nm):
@@ -60,7 +63,7 @@ def share_exists(share_nm):
         :param str share_nm: share name
         :return: Existence of share with such name
         :rtype: bool
-        """
+    """
     share = yf.Ticker(share_nm.upper())
 
     try:
