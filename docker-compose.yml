@@ -4,6 +4,6 @@ services:
     image: bot:latest
     container_name: bot-container
     build:
-      context: ..
+      context: .
     env_file:
       - .env
